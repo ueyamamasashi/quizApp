@@ -9,7 +9,6 @@ btn.addEventListener('click', ()=>{
     title.innerText = '取得中';
     p.innerText = '少々お待ち下さい';
     btn.style.display = 'none';
-
     fetch('https://opentdb.com/api.php?amount=10')
         .then((response) => {
             if(response.ok) {
@@ -20,13 +19,23 @@ btn.addEventListener('click', ()=>{
         })
         .then((json) => {
             let c=0;
-            console.log(json);
-            questionRes(json, c);            
+            questionRes(json, c);   
+            questionRes1(json, c);         
 
         })
         .catch((error) => console.log(error));
     
 });
+
+class Quiz {
+    constructor(question, category, difficulty, candidateAns, correctAns){
+        this.question = question;
+        this.category = category;
+        this.difficulty = difficulty;
+        this.candidateAns = candidateAns;
+        this.correctAns = correctAns;
+    }
+}
 
 const questionRes = (json, c)=>{   
     title.innerText = '問題'+parseInt(c+1);
@@ -35,26 +44,32 @@ const questionRes = (json, c)=>{
       }
     const newGenre = document.createElement('p');
     const newDiff = document.createElement('p');
-    //console.log(newGenre);
+    const question = json['results'][c]['question'];
+    const catego = json['results'][c]['category'];
+    const difficulty = json['results'][c]['difficulty'];
+    const candidateAns = json['results'][c]['incorrect_answers'];
+    const correctAns = json['results'][c]['correct_answer'];
     
-    newGenre.innerText = '[ジャンル] ' + json['results'][c]['category'];
-    newDiff.innerText = '[難易度] ' + json['results'][c]['difficulty'];
+    const quiz = new Quiz(question, catego, difficulty,candidateAns, correctAns);
+    
+    newGenre.innerText = '[ジャンル] ' + quiz.category;
+    newDiff.innerText = '[難易度] ' + quiz.difficulty;
     category.appendChild(newGenre);
     category.appendChild(newDiff);
-    p.innerText = json['results'][c]['question'];
+    p.innerText = quiz.question;
 
     //答え選択肢を一旦全て消去
     while (answers.firstChild) {
         answers.removeChild(answers.firstChild);
     }
-    let candidateAns = json['results'][c]['incorrect_answers'];
-    let correctAns = json['results'][c]['correct_answer'];
-    console.log(correctAns)
+    //let candidateAns = json['results'][c]['incorrect_answers'];
+    //let correctAns = json['results'][c]['correct_answer'];
+    console.log(quiz.correctAns)
     //答え候補に正解をpush(念の為)
-    candidateAns.push(correctAns);
-    console.log('candidateAns:'+candidateAns);
+    quiz.candidateAns.push(quiz.correctAns);
+    console.log('candidateAns:'+quiz.candidateAns);
     //candidateAnsをシャッフル
-    const shuffleCanAns = shuffle(candidateAns);
+    const shuffleCanAns = shuffle(quiz.candidateAns);
     console.log('shuffleCanAns:'+shuffleCanAns)
     for (let i=0;i<=shuffleCanAns.length-1;i++){
         const button = document.createElement('button');
@@ -64,7 +79,16 @@ const questionRes = (json, c)=>{
         button.style.display = 'block';
         answers.appendChild(button);
         answers.style.display = 'block';
-    } 
+    }
+}
+const questionRes1 = (json, c)=>{
+    const question = json['results'][c]['question'];
+    const catego = json['results'][c]['category'];
+    const difficulty = json['results'][c]['difficulty'];
+    const candidateAns = json['results'][c]['incorrect_answers'];
+    const correctAns = json['results'][c]['correct_answer'];
+    const quiz = new Quiz(question, catego, difficulty,candidateAns, correctAns)
+    const shuffleCanAns = shuffle(quiz.candidateAns);
     const btnTo = document.getElementsByClassName('answers');
     const btnToResult = Array.from(btnTo);
     console.log('btnToResult:'+btnToResult)
@@ -76,6 +100,8 @@ const questionRes = (json, c)=>{
             b.onclick = ()=>{
                 if (c === 9){
                     answers.style.display = 'none';
+                    const newGenre = category.firstChild;
+                    const newDiff = category.lastChild;
                     newDiff.innerText = '';
                     newGenre.innerText = `あなたの正解数は${corAnsC}です`;
                     p.innerText = '再度チャレンジしたい場合は下をクリック';                            
@@ -87,7 +113,8 @@ const questionRes = (json, c)=>{
                     console.log('corAnsC:'+corAnsC);
                     c++;
                     //questionResの再帰
-                    questionRes(json, c);  
+                    questionRes(json, c); 
+                    questionRes1(json, c); 
                 }
             }
         });
@@ -107,14 +134,4 @@ const shuffle = ([...array]) => {
     return array;
   }
 
-// const getCorAnsC = (i, correctAns)=>{
-//     if (answers.childNodes[i].innerText === correctAns){               
-//         const correctAnswer = document.getElementById(answers.childNodes[i].id);
-//         console.log('correctAnswer:'+correctAnswer.innerText);                        
-//         correctAnswer.addEventListener('click', (e)=>{
-//             console.log(e);
-//             corAnsC++;                   
-//         });
-//     }  
-//     return 
-// }
+  
